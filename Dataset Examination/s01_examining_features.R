@@ -18,6 +18,7 @@ outlier.idx <- detection.outliers(participant.df[, -c(1, 61:63, 72:73)], feature
 # 22 outliers are detected
 participant.df <- participant.df[-outlier.idx, ]
 rm(outlier.idx)
+write.csv(participant.df, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Datasets/V1 - Feb 2015/d01_original_noOutlier.csv")
 
 # Correlation Checking --------------------------------------------
 correlation.heatmap(participant.df[, -c(1, 61:63, 72:73)])
