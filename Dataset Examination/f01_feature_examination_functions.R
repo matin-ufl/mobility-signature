@@ -48,7 +48,7 @@ correlation.toTarget.barPlot <- function(df, variable.names = colnames(df), colo
 }
 
 performance.check <- function(actual, predicted) {
-     temp.fit <- lm(actual~predicted, data = data.frame(actual, predicted))
+     temp.fit <- lm(predicted~actual, data = data.frame(actual, predicted))
      summ <- summary(temp.fit)
      RMSE <- round(summ$sigma, digits = 4)
      R.Squared <- round(summ$adj.r.squared, digits = 4)
