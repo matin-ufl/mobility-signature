@@ -30,9 +30,9 @@ print(paste("AGE: ", mean_1, " (", sd_1, ") , ", mean_2, " (", sd_2, "), ", p.va
 
 # Women
 n_1 <- length(which(keyVariables.df$women[target.idx]))
-prc_1 <- round(n_1 * 100 / length(which(keyVariables.df$women)))
+prc_1 <- round(n_1 * 100 / length(which(target.idx)), digits = 1)
 n_2 <- length(which(keyVariables.df$women[!target.idx]))
-prc_2 <- round(n_2 * 100 / length(which(keyVariables.df$women)))
+prc_2 <- round(n_2 * 100 / length(which(!target.idx)), digits = 1)
 p.value <- round(chisq.test(table(keyVariables.df$women, target.idx))$p.value, digits = 4)
 print(paste("WOMEN: ", n_1, " (", prc_1, ") , ", n_2, " (", prc_2, ") , ", p.value, sep = ""))
 
@@ -74,8 +74,8 @@ sppb_1 <- which(keyVariables.df$sppbLT8[target.idx])
 sppb_2 <- which(keyVariables.df$sppbLT8[!target.idx])
 
 p.value <- round(chisq.test(table(keyVariables.df$sppbLT8, target.idx))$p.value, digits = 4)
-print(paste("SPPB Score <8: ", length(sppb_1), " (", round(length(sppb_1) * 100 / length(which(keyVariables.df$sppbLT8)), digits = 1), ") , ",
-            length(sppb_2), " (", round(length(sppb_2) * 100 / length(which(keyVariables.df$sppbLT8)), digits = 1), ") , ", p.value, sep = ""))
+print(paste("SPPB Score <8: ", length(sppb_1), " (", round(length(sppb_1) * 100 / length(which(target.idx)), digits = 1), ") , ",
+            length(sppb_2), " (", round(length(sppb_2) * 100 / length(which(!target.idx)), digits = 1), ") , ", p.value, sep = ""))
 rm(sppb_1, sppb_2)
 
 # walking speed
@@ -152,7 +152,18 @@ p.value <- round(chisq.test(table(keyVariables.df$pulmonary, target.idx))$p.valu
 print(paste("Chronic Pulmonary disease: ", n_1, " (", round(n_1 * 100 / length(keyVariables.df$pulmonary[target.idx]), digits = 1), ") , ",
             n_2, " (", round(n_2 * 100 / length(keyVariables.df$pulmonary[!target.idx]), digits = 1), ") , ", p.value, sep = ""))
 
-
-
-
+rm(n_1, n_2, p.value, prc_1, prc_2, sppb_1, sppb_2)
+# Accelerometer Features --------------------------------------------------
+afterVIF.df$valid_days <- participant.df$valid_days
+afterVIF.df$minutes_wear <- participant.df$minutes_wear
+afterVIF.df$minutes_nonWear <- participant.df$minutes_nonWear
+feature_summary.file <- "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Documents/021916/output04_feature_summary.csv"
+write(print("Feature,Mean (SD), Range (min - max)"), file = feature_summary.file, append = F)
+for (j in c(2:32, 34:36)) {
+     a <- print(paste(colnames(afterVIF.df)[j], ", ",
+                 round(mean(afterVIF.df[, j], na.rm = T), digits = 2), " (", round(sd(afterVIF.df[, j], na.rm = T), digits = 2), "), ",
+                 round(median(afterVIF.df[, j]), digits = 2), " (", round(min(afterVIF.df[, j]), digits = 2), " - ", round(max(afterVIF.df[, j]), digits = 2), ")", sep = ""))
+     write(a, file = feature_summary.file, append = T)
+}
+rm(a, j, feature_summary.file)
 
