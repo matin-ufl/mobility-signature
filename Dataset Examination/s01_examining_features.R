@@ -7,6 +7,7 @@ library(ggplot2)
 library(reshape2)
 library(usdm)
 library(glmnet)
+library(gridExtra)
 setwd("~/Workspaces/R workspace/Mobility Signature Paper/mobility-signature/Dataset Examination/")
 source("f01_feature_examination_functions.R")
 
@@ -14,11 +15,14 @@ source("f01_feature_examination_functions.R")
 participant.df <- read.csv(file = file.choose())
 
 # Rejecting outliers ----------------------------------------------
-outlier.idx <- detection.outliers(participant.df[, -c(1, 61:63, 72:73)], feature.no = 2, sd.times = 5)
-# 22 outliers are detected
-participant.df <- participant.df[-outlier.idx, ]
-rm(outlier.idx)
-write.csv(participant.df, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Datasets/V1 - Feb 2015/d01_original_noOutlier.csv")
+outlier.idx <- detection.outliers(participant.df[, -c(1, 61:63, 72:73)], feature.no = 13, sd.times = 3)
+# 10 outliers are detected
+
+# Do not remove outliers, later check their effect on the outcome
+#participant.df <- participant.df[-outlier.idx, ]
+#rm(outlier.idx)
+
+write.csv(participant.df, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Datasets/V1 - Feb 2015/d01_original.csv")
 
 # Correlation Checking --------------------------------------------
 correlation.heatmap(participant.df[, -c(1, 61:63, 72:73)])
@@ -29,8 +33,9 @@ correlation.heatmap(participant.df[, -c(1, 61:63, 72:73)])
 data.for.vif <- participant.df[, -c(1, 61:63, 72:73)]
 v <- vifstep(data.for.vif, th = 10)
 afterVIF.df <- cbind(Participant = participant.df$Participant, data.for.vif[, as.character(v@results$Variables)], participant.df[, 72:73])
+outlier.vif.idx <- detection.outliers(afterVIF.df[, -c(1, 33:34)], feature.no = 7, sd.times = 3)
 rm(v, data.for.vif)
-normal.afterVIF.df <- data.frame(afterVIF.df$Participant, scale(afterVIF.df[, -c(1, 32:33)]), afterVIF.df$walkspeed, afterVIF.df$isTraining)
+normal.afterVIF.df <- data.frame(afterVIF.df$Participant, scale(afterVIF.df[, -c(1, 33:34)]), afterVIF.df$walkspeed, afterVIF.df$isTraining)
 colnames(normal.afterVIF.df) <- colnames(afterVIF.df)
 write.csv(normal.afterVIF.df, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Datasets/V1 - Feb 2015/d02_after_vif_normal.csv", row.names = F)
 
@@ -40,9 +45,9 @@ results <- data.frame(matrix(nrow = 0, ncol = 7))
 colnames(results) <- c("Method", "RMSE", "R-Squared", "Accuracy", "Sensitivity", "Specificity", "F-Measure")
 
 # Sequential Feature Selection was performed using MATLAB
-# The following features were selected: c(9, 15, 26, 27)
-seq.result <- linear.performance(trainingSet = normal.afterVIF.df[normal.afterVIF.df$isTraining, c(9, 15, 26, 27, 32)],
-                                     testSet = normal.afterVIF.df[!normal.afterVIF.df$isTraining, c(9, 15, 26, 27, 32)])
+sfs.selectedFeatures <- c("meanWalkAC_avg", "axis1_Bucket_for_half_life", "axis3_Activity_counts_per_minute_per_bout_std", "noWalk_perBout", "walkspeed")
+seq.result <- linear.performance(trainingSet = normal.afterVIF.df[normal.afterVIF.df$isTraining, sfs.selectedFeatures],
+                                     testSet = normal.afterVIF.df[!normal.afterVIF.df$isTraining, sfs.selectedFeatures])
 results <- rbind(results, data.frame(Method = "Sequential", seq.result))
 rm(seq.result)
 
@@ -114,12 +119,27 @@ correlation.toTarget.barPlot(afterVIF.df[, -c(1, ncol(afterVIF.df))], color.grou
 
 
 # Top 5 Features ---------------------------------------------------
-top5.df <- normal.afterVIF.df[, c(1, 27, 17, 29, 15, 5, 32:33)]
+top5.df <- normal.afterVIF.df[, c("Participant", "meanWalkAC_avg", "axis3_Activity_counts_per_minute_per_bout_std", "steps_per_day", "axis2_Counts_per_min_for_half_life", "axis1_Bout_length_avg", "walkspeed", "isTraining")]
 top5.result <- linear.performance(trainingSet = top5.df[top5.df$isTraining, -c(1, ncol(top5.df))],
                                  testSet = top5.df[!top5.df$isTraining, -c(1, ncol(top5.df))])
 results <- rbind(results, data.frame(Method = "Top 5", top5.result))
 rm(top5.result)
-write.csv(results, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Documents/021916/output01_results.csv", row.names = F)
+write.csv(results, file = "~/Dropbox/Work-Research/Current Directory/Mobility Signature Paper/Documents/022616/output01_results.csv", row.names = F)
 
 
 
+# Checking outliers --------------------------------------------------
+rm(outlier.idx)
+plot.df <- afterVIF.df
+plot.df$class <- rep("normal", nrow(plot.df))
+plot.df$class[outlier.vif.idx] <- "Outlier"
+plot.df$text <- rep("", nrow(plot.df))
+plot.df$text[outlier.vif.idx] <- as.character(round(plot.df$walkspeed[outlier.vif.idx], digits = 2))
+
+g1 <- ggplot(data = plot.df) + geom_point(aes(x = steps_per_day, y = peak30_cadence, colour = class, size = class))
+g1 <- g1 + scale_colour_manual(values = c("blue", "red")) + scale_size_manual(values = c(3, 7)) + theme_bw() + geom_text(aes(x = steps_per_day, y = peak30_cadence, label = text, hjust = -0.2, just = 0))
+
+g2 <- ggplot(data = plot.df) + geom_point(aes(x = steps_per_day, y = minutes_1000, colour = class, size = class))
+g2 <- g2 + scale_colour_manual(values = c("blue", "red")) + scale_size_manual(values = c(3, 7)) + theme_bw() + geom_text(aes(x = steps_per_day, y = minutes_1000, label = text, hjust = -0.2, just = 0))
+grid.arrange(g1, g2, ncol = 2)
+rm(g1, g2, plot.df)
