@@ -1,4 +1,4 @@
-# Mobility Signature (_Actigraphy features for predicting mobility disability in older adults_)
+# Repository for article (_Actigraphy features for predicting mobility disability in older adults_)
 
 All the codes for our data analysis published under _Actigraphy features for predicting mobility disability in older adults_ is available.
 ***
