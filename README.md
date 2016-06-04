@@ -1,6 +1,6 @@
-# Mobility Signature (_Actigraphy features for predicting mobility disability in older adults _)
+# Mobility Signature (_Actigraphy features for predicting mobility disability in older adults_)
 
-All the codes for our data analysis published under _Actigraphy features for predicting mobility disability in older adults _ is available.
+All the codes for our data analysis published under _Actigraphy features for predicting mobility disability in older adults_ is available.
 ***
 The packages in this repository contain functions (_f0x_ files) and some scripts (_s0x_ files) to test them. Therefore, if you wish to use methods for data preprocessing and analysis, load the functions.
 The packages can be summarized as follows:
